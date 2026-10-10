@@ -1,6 +1,0 @@
-@PF___Gestor_de_Reservas_para_Excursiones_Acuáticas_HostAddress = http://localhost:5262
-
-GET {{PF___Gestor_de_Reservas_para_Excursiones_Acuáticas_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
