@@ -1,0 +1,6 @@
+@_1__Gestión_de_excursiones_acuáticas_HostAddress = http://localhost:5264
+
+GET {{_1__Gestión_de_excursiones_acuáticas_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
