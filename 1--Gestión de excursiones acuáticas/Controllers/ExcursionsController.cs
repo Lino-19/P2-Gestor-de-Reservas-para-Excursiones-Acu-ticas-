@@ -83,6 +83,27 @@ namespace _1__Gestión_de_excursiones_acuáticas.Controllers
             return CreatedAtAction(nameof(GetById), new { id = excursion.Id }, excursionDto);
         }
 
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, [FromBody] ExcursionCreateDto request)
+        {
+            var excursion = _context.Excursiones.Find(id);
+
+            if (excursion == null)
+            {
+                return NotFound();
+            }
+
+            excursion.Nombre = request.Nombre;
+            excursion.Descripcion = request.Descripcion;
+            excursion.Fecha = request.Fecha;
+            excursion.Precio = request.Precio;
+            excursion.MaxParticipantes = request.MaxParticipantes;
+
+            _context.SaveChanges();
+
+            return NoContent();
+        }
+
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
