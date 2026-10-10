@@ -83,6 +83,27 @@ namespace _1__Gestión_de_excursiones_acuáticas.Controllers
             return CreatedAtAction(nameof(GetById), new { id = cliente.Id }, clientDto);
         }
 
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, [FromBody] ClientCreateDto request)
+        {
+            var cliente = _context.Clientes.Find(id);
+
+            if (cliente == null)
+            {
+                return NotFound();
+            }
+
+            cliente.Nombre = request.Nombre;
+            cliente.Apellido = request.Apellido;
+            cliente.DocumentoIdentificacion = request.DocumentoIdentificacion;
+            cliente.Telefono = request.Telefono;
+            cliente.CorreoElectronico = request.CorreoElectronico;
+
+            _context.SaveChanges();
+
+            return NoContent();
+        }
+
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
