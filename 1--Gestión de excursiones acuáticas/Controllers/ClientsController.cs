@@ -1,4 +1,6 @@
-﻿using _1__Gestión_de_excursiones_acuáticas.Models;
+﻿using _1__Gestión_de_excursiones_acuáticas.Data;
+using _1__Gestión_de_excursiones_acuáticas.Models;
+using _1__Gestión_de_excursiones_acuáticas.Models.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace _1__Gestión_de_excursiones_acuáticas.Controllers
@@ -7,79 +9,93 @@ namespace _1__Gestión_de_excursiones_acuáticas.Controllers
     [Route("api/[controller]")]
     public class ClientsController : ControllerBase
     {
-        private static readonly List<Cliente> _clientes = new List<Cliente>();
+        private readonly ApplicationDbContext _context;
+
+        public ClientsController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
 
         [HttpGet]
-        public ActionResult<IEnumerable<Cliente>> GetAll()
+        public ActionResult<IEnumerable<ClientDto>> GetAll()
         {
-            return Ok(_clientes);
+            var clientes = _context.Clientes.Select(c => new ClientDto
+            {
+                Id = c.Id,
+                Nombre = c.Nombre,
+                Apellido = c.Apellido,
+                DocumentoIdentificacion = c.DocumentoIdentificacion,
+                Telefono = c.Telefono,
+                CorreoElectronico = c.CorreoElectronico
+            }).ToList();
+
+            return Ok(clientes);
         }
 
         [HttpGet("{id}")]
-        public ActionResult<Cliente> GetById(int id)
+        public ActionResult<ClientDto> GetById(int id)
         {
-            var cliente = _clientes.FirstOrDefault(c => c.Id == id);
+            var cliente = _context.Clientes.Find(id);
+
             if (cliente == null)
             {
-                return NotFound("Cliente no encontrado.");
+                return NotFound();
             }
-            return Ok(cliente);
+
+            var clientDto = new ClientDto
+            {
+                Id = cliente.Id,
+                Nombre = cliente.Nombre,
+                Apellido = cliente.Apellido,
+                DocumentoIdentificacion = cliente.DocumentoIdentificacion,
+                Telefono = cliente.Telefono,
+                CorreoElectronico = cliente.CorreoElectronico
+            };
+
+            return Ok(clientDto);
         }
 
         [HttpPost]
-        public ActionResult<Cliente> Create(Cliente cliente)
+        public ActionResult<ClientDto> Create([FromBody] ClientCreateDto request)
         {
-            bool existeDocumento = _clientes.Any(c =>
-                c.DocumentoIdentificacion.Equals(cliente.DocumentoIdentificacion, StringComparison.OrdinalIgnoreCase));
-
-            if (existeDocumento)
+            var cliente = new Cliente
             {
-                return BadRequest("Ya existe un cliente registrado con este documento de identificación.");
-            }
+                Nombre = request.Nombre,
+                Apellido = request.Apellido,
+                DocumentoIdentificacion = request.DocumentoIdentificacion,
+                Telefono = request.Telefono,
+                CorreoElectronico = request.CorreoElectronico
+            };
 
-            cliente.Id = _clientes.Any() ? _clientes.Max(c => c.Id) + 1 : 1;
-            _clientes.Add(cliente);
+            _context.Clientes.Add(cliente);
+            _context.SaveChanges();
 
-            return CreatedAtAction(nameof(GetById), new { id = cliente.Id }, cliente);
-        }
-
-        [HttpPut("{id}")]
-        public IActionResult Update(int id, Cliente cliente)
-        {
-            var clienteExistente = _clientes.FirstOrDefault(c => c.Id == id);
-            if (clienteExistente == null)
+            var clientDto = new ClientDto
             {
-                return NotFound("Cliente no encontrado.");
-            }
+                Id = cliente.Id,
+                Nombre = cliente.Nombre,
+                Apellido = cliente.Apellido,
+                DocumentoIdentificacion = cliente.DocumentoIdentificacion,
+                Telefono = cliente.Telefono,
+                CorreoElectronico = cliente.CorreoElectronico
+            };
 
-            bool documentoDuplicado = _clientes.Any(c =>
-                c.Id != id &&
-                c.DocumentoIdentificacion.Equals(cliente.DocumentoIdentificacion, StringComparison.OrdinalIgnoreCase));
-
-            if (documentoDuplicado)
-            {
-                return BadRequest("El documento de identificación ya pertenece a otro cliente.");
-            }
-
-            clienteExistente.Nombre = cliente.Nombre;
-            clienteExistente.Apellido = cliente.Apellido;
-            clienteExistente.DocumentoIdentificacion = cliente.DocumentoIdentificacion;
-            clienteExistente.Telefono = cliente.Telefono;
-            clienteExistente.CorreoElectronico = cliente.CorreoElectronico;
-
-            return NoContent();
+            return CreatedAtAction(nameof(GetById), new { id = cliente.Id }, clientDto);
         }
 
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var cliente = _clientes.FirstOrDefault(c => c.Id == id);
+            var cliente = _context.Clientes.Find(id);
+
             if (cliente == null)
             {
-                return NotFound("Cliente no encontrado.");
+                return NotFound();
             }
 
-            _clientes.Remove(cliente);
+            _context.Clientes.Remove(cliente);
+            _context.SaveChanges();
+
             return NoContent();
         }
     }

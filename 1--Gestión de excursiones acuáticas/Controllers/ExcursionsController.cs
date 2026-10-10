@@ -1,66 +1,101 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using _1__Gestión_de_excursiones_acuáticas.Data;
+using _1__Gestión_de_excursiones_acuáticas.Models;
+using _1__Gestión_de_excursiones_acuáticas.Models.Dtos;
+using Microsoft.AspNetCore.Mvc;
 
-namespace _1__Gestión_de_excursiones_acuáticas
+namespace _1__Gestión_de_excursiones_acuáticas.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class ExcursionsController : ControllerBase
     {
-        private static readonly List<Excursion> excursiones = new List<Excursion>();
+        private readonly ApplicationDbContext _context;
+
+        public ExcursionsController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
 
         [HttpGet]
-        public ActionResult<IEnumerable<Excursion>> Get()
+        public ActionResult<IEnumerable<ExcursionDto>> GetAll()
         {
+            var excursiones = _context.Excursiones.Select(e => new ExcursionDto
+            {
+                Id = e.Id,
+                Nombre = e.Nombre,
+                Descripcion = e.Descripcion,
+                Fecha = e.Fecha,
+                Precio = e.Precio,
+                MaxParticipantes = e.MaxParticipantes
+            }).ToList();
+
             return Ok(excursiones);
         }
 
         [HttpGet("{id}")]
-        public ActionResult<Excursion> Get(int id)
+        public ActionResult<ExcursionDto> GetById(int id)
         {
-            var excursion = excursiones.FirstOrDefault(e => e.Id == id);
+            var excursion = _context.Excursiones.Find(id);
+
             if (excursion == null)
             {
                 return NotFound();
             }
-            return Ok(excursion);
+
+            var excursionDto = new ExcursionDto
+            {
+                Id = excursion.Id,
+                Nombre = excursion.Nombre,
+                Descripcion = excursion.Descripcion,
+                Fecha = excursion.Fecha,
+                Precio = excursion.Precio,
+                MaxParticipantes = excursion.MaxParticipantes
+            };
+
+            return Ok(excursionDto);
         }
 
         [HttpPost]
-        public ActionResult<Excursion> Post([FromBody] Excursion nuevaExcursion)
+        public ActionResult<ExcursionDto> Create([FromBody] ExcursionCreateDto request)
         {
-            nuevaExcursion.Id = excursiones.Count > 0 ? excursiones.Max(e => e.Id) + 1 : 1;
-            excursiones.Add(nuevaExcursion);
-            return CreatedAtAction(nameof(Get), new { id = nuevaExcursion.Id }, nuevaExcursion);
-        }
-
-        [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody] Excursion excursionActualizada)
-        {
-            var excursion = excursiones.FirstOrDefault(e => e.Id == id);
-            if (excursion == null)
+            var excursion = new Excursion
             {
-                return NotFound();
-            }
+                Nombre = request.Nombre,
+                Descripcion = request.Descripcion,
+                Fecha = request.Fecha,
+                Precio = request.Precio,
+                MaxParticipantes = request.MaxParticipantes
+            };
 
-            excursion.Nombre = excursionActualizada.Nombre;
-            excursion.Descripcion = excursionActualizada.Descripcion;
-            excursion.Fecha = excursionActualizada.Fecha;
-            excursion.Precio = excursionActualizada.Precio;
-            excursion.MaxParticipantes = excursionActualizada.MaxParticipantes;
+            _context.Excursiones.Add(excursion);
+            _context.SaveChanges();
 
-            return NoContent();
+            var excursionDto = new ExcursionDto
+            {
+                Id = excursion.Id,
+                Nombre = excursion.Nombre,
+                Descripcion = excursion.Descripcion,
+                Fecha = excursion.Fecha,
+                Precio = excursion.Precio,
+                MaxParticipantes = excursion.MaxParticipantes
+            };
+
+            return CreatedAtAction(nameof(GetById), new { id = excursion.Id }, excursionDto);
         }
 
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var excursion = excursiones.FirstOrDefault(e => e.Id == id);
+            var excursion = _context.Excursiones.Find(id);
+
             if (excursion == null)
             {
                 return NotFound();
             }
 
-            excursiones.Remove(excursion);
+            _context.Excursiones.Remove(excursion);
+            _context.SaveChanges();
+
             return NoContent();
         }
     }
