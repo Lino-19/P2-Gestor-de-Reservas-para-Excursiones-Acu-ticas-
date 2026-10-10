@@ -7,4 +7,8 @@
     <RootNamespace>_1__Gestión_de_excursiones_acuáticas</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.3.0" />
+  </ItemGroup>
+
 </Project>
